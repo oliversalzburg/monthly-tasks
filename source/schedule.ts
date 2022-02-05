@@ -1,3 +1,5 @@
+import YAML from "yaml";
+import fs from "fs/promises";
 import { RRule, RRuleSet, rrulestr } from "rrule";
 
 export class ScheduleEntry {
@@ -46,28 +48,65 @@ export class Schedule {
     }
     return entries;
   }
+
+  static async fromFile(path: string) {
+    const configData = await fs.readFile(path, "utf-8");
+    const config = YAML.parse(configData);
+    const schedule = new Schedule();
+    for (const task of config.tasks) {
+      schedule.add(
+        task.title,
+        new RRule({
+          byweekday: task.byweekday.map(decodeWeekday),
+          dtstart: new Date(Date.UTC(2000, 1, 1, 0, 0)),
+          freq: decodeFrequency(task.freq),
+          interval: task.interval ?? 1,
+        })
+      );
+    }
+
+    return schedule;
+  }
 }
 
-const schedule = new Schedule();
+function decodeFrequency(frequency: string) {
+  switch (frequency) {
+    case "daily":
+      return RRule.DAILY;
 
-schedule.add(
-  "Pflanzen gießen",
-  new RRule({
-    freq: RRule.WEEKLY,
-    interval: 1,
-    byweekday: [RRule.SU],
-    dtstart: new Date(Date.UTC(2000, 1, 1, 0, 0)),
-  })
-);
+    case "weekly":
+      return RRule.WEEKLY;
 
-schedule.add(
-  "Orchideen tauchen",
-  new RRule({
-    freq: RRule.WEEKLY,
-    interval: 2,
-    byweekday: [RRule.SU],
-    dtstart: new Date(Date.UTC(2000, 1, 1, 0, 0)),
-  })
-);
+    case "monthly":
+      return RRule.MONTHLY;
+  }
 
-export { schedule };
+  throw new Error(`Frequency '${frequency}' is not understood.`);
+}
+
+function decodeWeekday(weekday: string) {
+  switch (weekday) {
+    case "MO":
+      return RRule.MO;
+
+    case "TU":
+      return RRule.TU;
+
+    case "WE":
+      return RRule.WE;
+
+    case "TH":
+      return RRule.TH;
+
+    case "FR":
+      return RRule.FR;
+
+    case "SA":
+      return RRule.SA;
+
+    case "SU":
+      return RRule.SU;
+  }
+
+  throw new Error(`Week day '${weekday}' is not understood.`);
+}

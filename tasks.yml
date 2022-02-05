@@ -1,0 +1,10 @@
+tasks:
+  - title: Pflanzen gießen
+    freq: weekly
+    byweekday:
+      - SU
+  - title: Orchideen tauchen
+    freq: weekly
+    interval: 2
+    byweekday:
+      - SU

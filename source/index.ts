@@ -3,7 +3,7 @@ import ElapsedTime from "elapsed-time";
 import fs from "fs/promises";
 import readline from "readline";
 import { google } from "googleapis";
-import { PersistedTask, schedule, Task } from "./schedule";
+import { PersistedTask, Schedule, Task } from "./schedule";
 import { DateTime } from "luxon";
 
 // If modifying these scopes, delete token.json.
@@ -15,6 +15,7 @@ const SCOPES = [
 // created automatically when the authorization flow completes for the first
 // time.
 const TOKEN_PATH = "token.json";
+const TASKS_PATH = "tasks.yml";
 
 type ICredentials = {
   installed: {
@@ -172,9 +173,18 @@ async function createMissingTask(
   const firstDay = DateTime.now().startOf("month").startOf("day");
   const lastDay = DateTime.now().endOf("month").endOf("day");
 
+  let schedule;
+  try {
+    schedule = await Schedule.fromFile(TASKS_PATH);
+  } catch (error) {
+    console.error(`No '${TASKS_PATH}' found. Exiting.`, error);
+    process.exit(0);
+  }
+
   console.info(
     `Generating schedule from ${firstDay.toISO()} to ${lastDay.toISO()}...`
   );
+
   schedule.print();
 
   const toCreate = schedule.forRange(firstDay.toJSDate(), lastDay.toJSDate());
