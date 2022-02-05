@@ -1,6 +1,6 @@
 {
   "extends": "@tsconfig/node16/tsconfig.json",
-  "include": ["source"],
+  "include": ["@types", "source"],
   "compilerOptions": {
     "incremental": true,
     "outDir": "output",
